@@ -25,35 +25,44 @@ jobs:
       matrix:
         include:
           - ANSIBLE: "2.10"
+            MOLECULE_DISTRO: ubuntu2204
             MOLECULE_SCENARIO: default
           - ANSIBLE: "3.4"
+            MOLECULE_DISTRO: ubuntu2204
             MOLECULE_SCENARIO: default
           - ANSIBLE: "4.10"
+            MOLECULE_DISTRO: ubuntu2204
             MOLECULE_SCENARIO: default
           - ANSIBLE: "5.10"
+            MOLECULE_DISTRO: ubuntu2204
             MOLECULE_SCENARIO: default
           - ANSIBLE: "6.6"
+            MOLECULE_DISTRO: ubuntu2204
+            MOLECULE_SCENARIO: default
+          - ANSIBLE: "6.6"
+            MOLECULE_DISTRO: ubuntu2204
             MOLECULE_SCENARIO: latest
           - ANSIBLE: "6.6"
+            MOLECULE_DISTRO: ubuntu2204
             MOLECULE_SCENARIO: upgrade
           - ANSIBLE: "6.6"
+            MOLECULE_DISTRO: ubuntu2204
             MOLECULE_SCENARIO: scenario_with_local_binary_directory
           - ANSIBLE: "6.6"
+            MOLECULE_DISTRO: ubuntu2204
             MOLECULE_SCENARIO: download_and_propagate
           - ANSIBLE: "6.6"
-            MOLECULE_SCENARIO: default
             MOLECULE_DISTRO: ubuntu2004
-          - ANSIBLE: "6.6"
             MOLECULE_SCENARIO: default
-            MOLECULE_DISTRO: ubuntu2204
           - ANSIBLE: "6.6"
-            MOLECULE_SCENARIO: default
             MOLECULE_DISTRO: debian10
-          - ANSIBLE: "6.6"
             MOLECULE_SCENARIO: default
+          - ANSIBLE: "6.6"
             MOLECULE_DISTRO: debian11
+            MOLECULE_SCENARIO: default
 #          - ANSIBLE: "4.3"
 #            MOLECULE_DISTRO: centos7
+#            MOLECULE_SCENARIO: default
           - ANSIBLE: "6.6"
             MOLECULE_DISTRO: centos8
             MOLECULE_SCENARIO: default
@@ -76,6 +85,41 @@ jobs:
           ANSIBLE: ${{ matrix.ANSIBLE }}
           MOLECULE_DISTRO: ${{ matrix.MOLECULE_DISTRO }}
           MOLECULE_SCENARIO: ${{ matrix.MOLECULE_SCENARIO }}
+          MOLECULE_IMAGE: geerlingguy/docker-${{ matrix.MOLECULE_DISTRO }}-ansible:latest
+        run: |
+          tox -- pip list
+          tox -- molecule test -s ${MOLECULE_SCENARIO} --destroy always
+
+  molecule_macos:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ANSIBLE: ["6.6"]
+        MOLECULE_SCENARIO:
+          - default
+          - latest
+          - uprade
+          - scenario_with_local_binary_directory
+          - download_and_propagate
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Docker
+        uses: docker-practice/actions-setup-docker@master
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Install tox
+        run: |
+          python -m pip install --upgrade pip
+          pip list
+          pip install tox tox-gh-actions
+      - name: Run molecule
+        env:
+          ANSIBLE: ${{ matrix.ANSIBLE }}
+          MOLECULE_SCENARIO: ${{ matrix.MOLECULE_SCENARIO }}
+          MOLECULE_IMAGE: "sickcodes/docker-osx:latest"
         run: |
           tox -- pip list
           tox -- molecule test -s ${MOLECULE_SCENARIO} --destroy always
